@@ -1,4 +1,6 @@
+# python bedToSeq.py -i ../example/test.bed -o ../example/test.fasta -p 5 -r /restricted/projectnb/benwol/jmh/script/ref/human/hg38_111/Homo_sapiens.GRCh38.dna_sm.primary_assembly.fa
 from pybedtools import BedTool
+import argparse
 
 import pybedtools
 
@@ -30,7 +32,27 @@ def get_sequence(chromosome, start, end, strand, reference):
     
     return sequence
 
+
+def read_bed_and_write_fasta(bed_file, fasta_file, reference, extend):
+    with open(bed_file, 'r') as bed, open(fasta_file, 'w') as fasta:
+        for line in bed:
+            fields = line.strip().split()
+            if len(fields) < 6:
+                continue  # Ensuring there's enough fields for chr, start, end, name, score, strand
+            
+            chromosome, start, end, name, score, strand = fields[:6]
+            print(chromosome, start, end, name, score, strand)
+            sequence = get_sequence(chromosome, int(start) - int(extend), int(end) + int(extend), strand, reference)
+            fasta.write(f"> {name}\n{sequence}\n")
+
+
 if __name__=='__main__':
-    ref = '/restricted/projectnb/benwol/jmh/script/ref/human/hg38_111/Homo_sapiens.GRCh38.dna_sm.primary_assembly.fa'
-    seq = get_sequence('5', 10000, 10005, '+', ref)
-    print(seq)
+    parser = argparse.ArgumentParser(description="Convert BED to FASTA using specified genomic reference.")
+    parser.add_argument("-i", "--input_bed", required=True, help="The input BED file.")
+    parser.add_argument("-o", "--output_fasta", required=True, help="The output FASTA file.")
+    parser.add_argument("-r", "--reference", required=True, help="The reference genome file or identifier.")
+    parser.add_argument("-p", "--append", required=False, default=0, help="The length extending seq")
+    
+    args = parser.parse_args()
+    
+    read_bed_and_write_fasta(args.input_bed, args.output_fasta, args.reference, args.append)
