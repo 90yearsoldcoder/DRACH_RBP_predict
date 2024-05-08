@@ -1,4 +1,5 @@
 scripts/tmpJSON.json
 processing
 scripts/*.json
+scripts/__pycache__
 result

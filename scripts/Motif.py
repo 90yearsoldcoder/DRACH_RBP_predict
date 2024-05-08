@@ -17,11 +17,11 @@ def local_align(input_seq, RBPname, RBPhelper7, RBPhelper8,  cutoff_score, detai
         score8 = RBPhelper8.askScore(base, 8, RBPname)
         if score7 and score7 >= cutoff_score:
             score_array.append(score7)
-            position_array.append(ind - 6)
+            position_array.append((ind - 6, ind))
             motif_count += 1
         if score8 and score8 >= cutoff_score:
             score_array.append(score8)
-            position_array.append(ind - 7)
+            position_array.append((ind - 7, ind))
             motif_count += 1
 
     if detail == True:
@@ -79,9 +79,10 @@ if __name__ == "__main__":
     for RNA in RNA_dic:
         record[RNA] = {}
         record[RNA]['type'] = 'circular' if 'circ' in RNA else 'linear'
-        record[RNA]['RNAseq'] = RNA_dic[RNA]
+        record[RNA]['seq'] = RNA_dic[RNA]
         record[RNA]['motifs'] = []
-        for RBP in RBPlist:
+        for RBP_ind in range(len(RBPlist)):
+            RBP = RBPlist[RBP_ind]
             print("Working on circRNA:{RNA} and RBP:{RBP}".format(RBP=RBP, RNA=RNA))
             motif_count, score_array, position_array = local_align(RNA_dic[RNA], RBP, RBPhelper7, RBPhelper8, args.cutoff_score, detail=True)
             if motif_count == 0:
@@ -89,9 +90,10 @@ if __name__ == "__main__":
             record[RNA]['motifs'].append(
                 {
                     'motif_name': RBP,
+                    'RBP_key': RBP_ind,
                     'count': motif_count,
                     'scores': score_array,
-                    'positions': position_array
+                    'positions': position_array,
                 }
             )
         record[RNA]['motifs'] = sorted(record[RNA]['motifs'], key=lambda x: x['count'], reverse=True)
